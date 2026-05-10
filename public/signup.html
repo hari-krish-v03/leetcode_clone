@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <title>Sign In</title>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <style>
+            body{
+                margin: 0;
+                height: 100vh;
+                display:flex;
+                justify-content: center;
+                align-items: center;
+                font-family: Arial;
+                color:white;
+                background-color: black;
+            }
+
+            .container{
+                width: 300px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            input{
+                padding: 10px;
+                font-size:16px;
+            }
+            button{
+                padding: 10px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <h2>Enter Details to Signup</h2>
+            <input type="text" placeholder="Enter your name" id="name">
+            <input type="email" placeholder="Enter email" id="email">
+            <input type="password" placeholder="Enter password" id="pass">
+            <button onclick="signup()">Signup</button>
+        </div>
+
+        <script>
+            async function signup(){
+                const name = document.getElementById("name").value;
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("pass").value;
+                try{
+                    const response = await axios.post("/signup",{
+                    name : name,
+                    email:email,
+                    password:password
+                    })
+                    alert("Sign up successful. Click ok to signin");
+                    
+                    window.location.href = "/";
+                }
+                catch(err){
+                    alert("Some error signing up");
+                }
+            }
+        </script>
+    </body>
+    
+</html>

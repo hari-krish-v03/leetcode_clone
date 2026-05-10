@@ -1,0 +1,123 @@
+<html>
+    <head>
+        <title>Leetcode Clone</title>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+        <style>
+            body{
+                font-family: Arial;
+                background-color: black;
+                color: white;
+            }
+
+            #search{
+                width:300px;
+                padding:10px;
+                margin-bottom:20px;
+            }
+
+            .problem{
+                display:flex;
+                justify-content: space-between;
+                padding:10px;
+                border-bottom: 1px solid white;
+                cursor:pointer
+            }
+            #logoutBtn{
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                padding: 10px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+
+    <body>
+        <button id="logoutBtn" onclick="logout()">Logout</button>
+
+        <input type="text" id="search" placeholder="Search question">
+        <button onclick="searchProb()">Search</button>
+        <button onclick="showProblem()">Clear</button>
+
+        <div id="list"></div>
+
+        <script>
+            //back button 
+            async function clickProblem(problemNum){
+                if(localStorage.getItem("token")){
+                    window.location.href = "/"+problemNum;
+                }
+                else{
+                    alert("user not logged in");
+                    window.location.href = "/";
+                }
+               
+                // await axios.get("/"+problemNum ,{
+                //     headers: {token:localStorage.getItem("token")}
+                // })
+            }
+
+            //shows the list of problems
+            async function showProblem(){
+                const token = localStorage.getItem("token");
+                const response = await axios.get("http://localhost:3000/problems",{
+                    headers:{token:token}
+                });
+                const data = response.data;
+                render(data);
+            }
+
+            showProblem();
+
+            async function searchProb(){
+                const searchText = document.getElementById("search").value;
+                // console.log(searchText);
+                const response = await axios.post("http://localhost:3000/search",{
+                    searchText : searchText
+                },
+                {
+                    headers: {token:localStorage.getItem("token")}
+                })
+                if(response.data.title == undefined){
+                    const list = document.getElementById("list");
+                    const div = document.createElement("div");
+                    list.innerHTML = "";
+                    div.innerHTML = "No such problem, Please try again";
+                    list.append(div);
+                }
+                else{
+                    const dataArr = [];
+                    dataArr.push(response.data);
+                    render(dataArr);
+                }
+               
+            }
+
+            function render(data){
+                const list = document.getElementById('list');
+                list.innerHTML = "";
+                for(let i=0;i<data.length;i++){
+                    const div = document.createElement("div");
+                    div.className = "problem";
+
+                    div.innerHTML="<div>"+data[i].num +": " + data[i].title+"</div> <div>"+data[i].difficulty+"</div>";
+                    
+                    div.onclick = function(){
+                        clickProblem(data[i].num);
+                    }
+                    
+                    list.appendChild(div);
+                }
+            }
+
+            function logout(){
+                localStorage.removeItem("token");
+                window.location.href = "/";
+            }
+            
+
+        </script>
+        
+    </body>
+</html>

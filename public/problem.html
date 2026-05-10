@@ -1,0 +1,233 @@
+<html>
+    <head>
+        <title>Leetcode Clone</title>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script src="https://unpkg.com/monaco-editor@latest/min/vs/loader.js"></script>
+        <style>
+            body{
+                font-family:Arial;
+                background-color: #000000;
+                color: white;
+            }
+
+            .container{
+                display: flex;
+                min-height:100vh;
+            }
+
+            .left{
+                width:50%;
+                padding: 20px;
+                border-right: 1px solid black;
+            }
+
+            .right{
+                width:50%;
+                padding: 20px;
+            }
+
+            textarea{
+                width:100%;
+                height:450px;
+                background-color: #000000;
+                color:white;
+                overflow: auto;
+            }
+            #output{
+                margin-top:20px;
+                border:1px solid white;
+                padding:10px;
+                height: 100px;
+                overflow: auto;
+            }
+
+            #editor{
+
+            width: 100%;
+
+            height: 500px;
+
+            border: 1px solid white;
+            }
+
+            select{
+
+                width: 100px;
+
+                padding: 5px;
+
+                font-size: 12px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class = "left">
+                <button onclick="back()">Back</button>
+                <br> <br>
+                <h1 id="problem_name"></h1>
+                <p id="problem_statement"> 
+                </p>
+            </div>
+
+            <div class="right">
+                <select id="language" onchange="changeLang()">
+                    <option value="javascript">JavaScript</option>
+                    <option value="java">Java</option>
+                </select>                               
+                <br>
+                
+                <!--
+                <textarea id="code-to-run">
+                </textarea>
+                -->
+                <div id="editor"></div>
+
+                <br><br>
+
+                <button onclick="run()" id="runBtn">
+                    Run
+                </button>
+
+                <div id="output">
+                    Output Here
+                </div>
+            </div>
+
+        </div>
+
+        <script>
+            async function back(){
+                if(localStorage.getItem("token")){
+                    window.location.href = "/in";
+                }
+                else{
+                    alert("Please Login to continue");
+                    window.location.href = "/";
+                }
+                // await axios.get("/in",{
+                //     headers:{token:localStorage.getItem("token")}
+                // })
+            }
+
+            async function fetchProblemData(){
+                const problemName = document.getElementById("problem_name");
+                const problemStatement = document.getElementById("problem_statement");
+                // console.log(window.location.pathname);
+                const response = await axios.get("http://localhost:3000/getProblem"+ window.location.pathname, 
+                    {
+                    headers: {token:localStorage.getItem("token")}
+                    }
+                );
+                // console.log(response.data);
+                problemName.innerHTML = response.data.title;
+                problemStatement.innerHTML = response.data.description;
+            }
+
+            
+
+            async function run(){
+                // const code = document.getElementById("code-to-run").value;
+                const code = editor.getValue();
+                const language = document.getElementById("language").value;
+                console.log(code);
+
+                const response = await axios.post("http://localhost:3000/run",{
+                    code : code,
+                    language : language
+                },
+                {
+                    headers: {token:localStorage.getItem("token")}
+                });
+
+                const opContainer = document.getElementById("output");
+                const op = response.data.output;
+                opContainer.innerHTML = op; 
+            }
+
+            let editor;
+            require.config({paths: {vs:"https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs"}});
+            
+            require(["vs/editor/editor.main"],
+                    async function () {
+                        editor = monaco.editor.create(document.getElementById("editor"),
+                            {   value: "",
+                                language:"javascript",
+                                theme: "vs-dark",
+                                automaticLayout: true
+                            });
+
+                    await changeLang();
+                    saveCode();
+                    }
+            );
+
+            async function changeLang(){
+                const codeExist = await loadCode();
+                if(codeExist === "NOTFOUND"){
+                    const jsTemplate = "console.log('Hi there - uses JavaScript');"
+                const javaTemplate = 
+`public class Main{
+    public static void main(String[] args){
+        System.out.println("Hi there - uses Java");
+    }   
+}`
+                const language = document.getElementById("language").value;
+                monaco.editor.setModelLanguage(editor.getModel(),language);
+
+                if(language==="javascript"){
+                    editor.setValue(jsTemplate);
+                }
+                else if(language==="java"){
+                    editor.setValue(javaTemplate);
+                }
+                }
+                
+            }
+
+            function saveCode(){
+                
+                if(localStorage.getItem("token")){
+                    setInterval(codeUpdate,5000);
+                }
+            }
+
+            async function codeUpdate(){
+                const code = editor.getValue();
+                const lang = document.getElementById("language").value;
+                const response = await axios.post("/codeSaver",{
+                    code : code,
+                    num : window.location.pathname,
+                    language: lang
+                },{
+                    headers: {token: localStorage.getItem("token")}
+                })
+            }
+
+            async function loadCode(){ 
+                const language = document.getElementById("language").value;
+                const response = await axios.post("/savedCode"+window.location.pathname,{
+                    language: language
+                },
+                {
+                    headers:{
+                        token:localStorage.getItem("token"),
+                    }
+                })
+
+                if(response.data!=="NOTFOUND"){
+                    editor.setValue(response.data.code);
+                    return "FOUND";
+                }
+                else{
+                    return "NOTFOUND";
+                }
+            }
+
+            fetchProblemData();
+            // loadCode();
+            // saveCode();
+             
+        </script>
+    </body>
+</html>

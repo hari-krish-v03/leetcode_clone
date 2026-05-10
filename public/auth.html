@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <title>Sign In</title>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <style>
+            body{
+                margin: 0;
+                height: 100vh;
+                display:flex;
+                justify-content: center;
+                align-items: center;
+                font-family: Arial;
+                color:white;
+                background-color: black;
+            }
+
+            .container{
+                width: 300px;
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            input{
+                padding: 10px;
+                font-size:16px;
+            }
+            button{
+                padding: 10px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <h2>Login</h2>
+            <input type="email" placeholder="Enter email" id="email">
+            <input type="password" placeholder="Enter password" id="pass">
+            <button onclick="signin()">Login</button>
+            
+            <button onclick="signup()">Create New Account</button>
+
+        </div>
+
+        <script>
+            async function signin(){
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("pass").value;
+                try{
+                    const response = await axios.post("/signin",{
+                        email:email,
+                        password:password
+                    })
+                    if(response.data.token){
+                        alert("Sign in successful");
+                        localStorage.setItem("token",response.data.token);
+                        if(localStorage.getItem("token")){
+                            window.location.href = "/in";
+                        }
+                        else{
+                            alert("Login to continue");
+                        }
+                        
+                        // await axios.get("/in",{
+                        //     headers:{token:localStorage.getItem("token")}
+                        // })
+                    }
+                }
+                catch(err){
+                    alert("Incorrect Cred");
+                }              
+            }
+
+            async function signup(){
+                window.location.href = "/new";
+            }
+        </script>
+    </body>
+    
+</html>
