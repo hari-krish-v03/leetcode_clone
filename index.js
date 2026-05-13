@@ -6,16 +6,17 @@ const cors = require("cors");
 const fs = require("fs");
 const {exec} = require("child_process");
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const {problemListModel,userListModel,codeStoreModel} = require("./db");
 const jwt = require("jsonwebtoken");
 
-mongoose.connect("mongodb+srv://mongo_trial_db:harikkt34i@cluster0.dphlsz1.mongodb.net/LeetcodeProblems");
+mongoose.connect("");
 
 const port = 3000;
 const JWT_Secret = "jwtsecret";
 
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
 
 
 app.get("/",(req,res)=>{
@@ -51,7 +52,7 @@ app.get('/getProblem/:num',auth,async (req,res)=>{
 
 //to run code locally
 app.post('/run',auth,async (req,res)=>{
-    console.log("reached");
+    // console.log("reached");
     const code = req.body.code;
     const language = req.body.language;
 
@@ -78,8 +79,6 @@ app.post('/run',auth,async (req,res)=>{
                     fs.unlinkSync(__dirname + "/code/Main.class");
                 }
             }
-           
-
             if(error){
                 console.log("My error: "+ stderr);
                 return res.json({
@@ -111,9 +110,12 @@ app.post('/signup',async (req,res)=>{
     const email = req.body.email;
     const password = req.body.password;
     const name = req.body.name;
+
+    const encryptedPWD = await bcrypt.hash(password,5);
+
     await userListModel.create({
         email: email,
-        password: password,
+        password: encryptedPWD,
         name: name
     })
     res.send("signed up successfully");
@@ -125,9 +127,10 @@ app.post('/signin',async (req,res)=>{
     const password = req.body.password;
     const response = await userListModel.findOne({
         email:email,
-        password:password
     })
-    if(response){
+    console.log(response.password);
+    const correctPWD = await bcrypt.compare(password,response.password);
+    if(correctPWD){
         console.log("Sign in success");
         const token = jwt.sign({
            email: response.email
@@ -141,7 +144,7 @@ app.post('/signin',async (req,res)=>{
             message: "Incorrect credentials"
         })
     }
-})
+});
 
 //saves code to db
 app.post("/codeSaver",auth,async (req,res)=>{
