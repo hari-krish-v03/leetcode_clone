@@ -10,10 +10,13 @@ const bcrypt = require("bcrypt");
 const {problemListModel,userListModel,codeStoreModel} = require("./db");
 const jwt = require("jsonwebtoken");
 
-mongoose.connect("");
+const {auth} = require("./middlewares/auth");
+
+require("dotenv").config();
+mongoose.connect(process.env.MongoUrl);
 
 const port = 3000;
-const JWT_Secret = "jwtsecret";
+const JWT_Secret = process.env.jwtSecret;
 
 app.use(express.json());
 // app.use(cors());
@@ -187,19 +190,7 @@ app.post("/savedCode/:num",auth,async(req,res)=>{
     
 })
 
-function auth(req,res,next){
-    const token = req.headers.token;
-    // console.log(token + " in middleware");
-    if(token==undefined){
-        res.sendFile(__dirname+"/public/auth.html")
-        return;
-    }
-    // console.log(token);
-    const decodedEmail = jwt.verify(token,JWT_Secret);
-    // console.log(decodedEmail);
-    req.creds = decodedEmail;
-    next();
-}
+
 
 //this takes to the page where we can solve the problem
 app.get('/:id',(req,res)=>{
