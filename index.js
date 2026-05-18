@@ -1,19 +1,22 @@
+//Import required libraries
 const express = require("express");
-const app = express();
-
 const axios = require("axios");
 const cors = require("cors");
 const fs = require("fs");
 const {exec} = require("child_process");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const {problemListModel,userListModel,codeStoreModel} = require("./db");
 const jwt = require("jsonwebtoken");
 
+//import from other files:
+const {problemListModel,userListModel,codeStoreModel} = require("./db");
 const {auth} = require("./middlewares/auth");
 
+//Create instance of express
+const app = express();
+
+//Import value from .env
 require("dotenv").config();
-mongoose.connect(process.env.MongoUrl);
 
 const port = 3000;
 const JWT_Secret = process.env.jwtSecret;
@@ -191,12 +194,21 @@ app.post("/savedCode/:num",auth,async(req,res)=>{
 })
 
 
-
 //this takes to the page where we can solve the problem
 app.get('/:id',(req,res)=>{
 
     res.sendFile(__dirname+"/public/problem.html")
 })
 
+async function main(){
+    try{
+        await mongoose.connect(process.env.MongoUrl);
+        app.listen(port);
+    }
+    catch(err){
+        console.log("DB connection is unsuccessfule");
+    }    
+    console.log("DB is connected and listening on port: "+ port);
+}
 
-app.listen(port);
+main();
